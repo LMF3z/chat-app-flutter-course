@@ -1,5 +1,8 @@
+import 'package:chat_app/helpers/index.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import 'package:chat_app/services/auth_service.dart';
 import 'package:chat_app/widgets/index.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -56,6 +59,8 @@ class _FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Container(
       margin: const EdgeInsets.only(top: 40),
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -75,10 +80,29 @@ class _FormState extends State<_Form> {
           ),
           CustomElevatedButton(
             labelText: 'Ingresar',
-            onPress: () {
-              print(emailEditingController.text);
-              print(passwordEditingController.text);
-            },
+            onPress: authService.isLoading
+                ? null
+                : () async {
+                    FocusScope.of(context).unfocus();
+
+                    final loginRes = await authService.login(
+                      emailEditingController.text.trim(),
+                      passwordEditingController.text.trim(),
+                    );
+
+                    if (loginRes) {
+                      //TODO: navegar a otra pantalla
+                      Navigator.pushReplacementNamed(context, 'users');
+                      return;
+                    }
+
+                    // motrar alertas
+                    showCustomAlert(
+                      context,
+                      'Incorrect credentials',
+                      'Verify data',
+                    );
+                  },
           )
         ],
       ),

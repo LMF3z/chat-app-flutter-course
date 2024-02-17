@@ -1,6 +1,9 @@
+import 'package:chat_app/helpers/index.dart';
+import 'package:chat_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
 import 'package:chat_app/widgets/index.dart';
+import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
@@ -57,6 +60,8 @@ class _FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Container(
       margin: const EdgeInsets.only(top: 40),
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -81,10 +86,28 @@ class _FormState extends State<_Form> {
           ),
           CustomElevatedButton(
             labelText: 'Registrar',
-            onPress: () {
-              print(emailEditingController.text);
-              print(passwordEditingController.text);
-            },
+            onPress: authService.isLoading
+                ? null
+                : () async {
+                    FocusScope.of(context).unfocus();
+
+                    final resgisterRes = await authService.register(
+                      nameEditingController.text.trim(),
+                      emailEditingController.text.trim(),
+                      passwordEditingController.text.trim(),
+                    );
+
+                    if (resgisterRes) {
+                      Navigator.pushReplacementNamed(context, 'login');
+                      return;
+                    }
+
+                    showCustomAlert(
+                      context,
+                      'An Error ocurred',
+                      'Verify data',
+                    );
+                  },
           )
         ],
       ),

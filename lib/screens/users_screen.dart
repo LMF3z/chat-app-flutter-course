@@ -1,4 +1,6 @@
+import 'package:chat_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import 'package:chat_app/models/user_model.dart';
@@ -15,21 +17,29 @@ class _UserScreenState extends State<UserScreen> {
       RefreshController(initialRefresh: false);
 
   final List<UserModel> usersList = [
-    UserModel('email1', 'name1', true, 'uuid1'),
-    UserModel('email2', 'name2', false, 'uuid2'),
-    UserModel('email3', 'name3', true, 'uuid3'),
+    UserModel(email: 'email1', name: 'name1', online: true, uuid: 'uuid1'),
+    UserModel(email: 'email2', name: 'name2', online: false, uuid: 'uuid2'),
+    UserModel(email: 'email3', name: 'name3', online: true, uuid: 'uuid3'),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+    final user = authService.userAuth;
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Mi nombre'),
+        title: Text(user!.name!),
         elevation: 1,
         backgroundColor: Colors.white,
         leading: IconButton(
-          onPressed: () {},
+          onPressed: () {
+            // TODO: desconectar socket
+
+            AuthService.deleteToken();
+            Navigator.pushReplacementNamed(context, 'login');
+          },
           icon: const Icon(Icons.exit_to_app_sharp),
         ),
         actions: [
@@ -72,19 +82,19 @@ class _UserScreenState extends State<UserScreen> {
 
   ListTile _usersListTile(UserModel user) {
     return ListTile(
-      title: Text(user.name),
-      subtitle: Text(user.email),
+      title: Text(user.name!),
+      subtitle: Text(user.email!),
       leading: CircleAvatar(
         backgroundColor: Colors.blue[100],
         child: Text(
-          user.name.substring(0, 2),
+          user.name!.substring(0, 2),
         ),
       ),
       trailing: Container(
         width: 10,
         height: 10,
         decoration: BoxDecoration(
-          color: user.online ? Colors.green : Colors.red,
+          color: user.online! ? Colors.green : Colors.red,
           borderRadius: BorderRadius.circular(100),
         ),
       ),
