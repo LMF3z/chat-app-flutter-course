@@ -1,7 +1,7 @@
-import 'package:chat_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:chat_app/services/index.dart';
 import 'package:chat_app/routes/routes_app.dart';
 
 void main() {
@@ -10,6 +10,12 @@ void main() {
       providers: [
         ChangeNotifierProvider(
           create: (_) => AuthService(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => SocketService(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ChatService(),
         ),
       ],
       child: const MyApp(),

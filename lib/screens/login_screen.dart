@@ -1,8 +1,8 @@
-import 'package:chat_app/helpers/index.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:chat_app/services/auth_service.dart';
+import 'package:chat_app/helpers/index.dart';
+import 'package:chat_app/services/index.dart';
 import 'package:chat_app/widgets/index.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -60,6 +60,7 @@ class _FormState extends State<_Form> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final socketService = Provider.of<SocketService>(context);
 
     return Container(
       margin: const EdgeInsets.only(top: 40),
@@ -91,7 +92,7 @@ class _FormState extends State<_Form> {
                     );
 
                     if (loginRes) {
-                      //TODO: navegar a otra pantalla
+                      socketService.connect();
                       Navigator.pushReplacementNamed(context, 'users');
                       return;
                     }

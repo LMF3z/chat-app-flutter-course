@@ -1,7 +1,10 @@
 import 'dart:io';
 
-import 'package:chat_app/widgets/index.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:chat_app/services/index.dart';
+import 'package:chat_app/widgets/index.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -20,29 +23,31 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final chatService = Provider.of<ChatService>(context);
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         elevation: 1,
-        title: const Column(
+        title: Column(
           children: [
             CircleAvatar(
               backgroundColor: Colors.blueAccent,
               maxRadius: 15,
               child: Text(
-                'TE',
-                style: TextStyle(
+                chatService.userTo!.name!.substring(0, 2),
+                style: const TextStyle(
                   fontSize: 12,
                   color: Colors.white,
                 ),
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 3,
             ),
             Text(
-              'Meslissa flores',
-              style: TextStyle(
+              chatService.userTo!.name!,
+              style: const TextStyle(
                 fontSize: 12,
               ),
             )
@@ -159,8 +164,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    // TODO: clear socket
-
+    final chats = ChatService();
+    chats.userTo = null;
     for (ChatMessage message in _messages) {
       message.animationController.dispose();
     }
