@@ -17,13 +17,68 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   final _textController = TextEditingController();
   final _focusNode = FocusNode();
 
+  ChatService? chatService;
+  SocketService? socketService;
+  AuthService? authService;
+
   final List<ChatMessage> _messages = [];
 
   bool _isWriting = false;
 
   @override
+  void initState() {
+    super.initState();
+    chatService = Provider.of<ChatService>(context, listen: false);
+    socketService = Provider.of<SocketService>(context, listen: false);
+    authService = Provider.of<AuthService>(context, listen: false);
+
+    socketService!.socket.on('personal-message', _listenMessage);
+
+    _chargeHistory(chatService!.userTo!.uuid!);
+  }
+
+  void _listenMessage(dynamic payload) {
+    ChatMessage newMessage = ChatMessage(
+      text: payload['message'],
+      uuid: payload['from'],
+      animationController: AnimationController(
+        vsync: this,
+        duration: const Duration(
+          milliseconds: 300,
+        ),
+      ),
+    );
+
+    setState(() {
+      _messages.insert(0, newMessage);
+    });
+
+    newMessage.animationController.forward();
+  }
+
+  void _chargeHistory(String userId) async {
+    final res = await chatService!.getMessagesChat(userId);
+    final history = res.map(
+      (msg) => ChatMessage(
+        text: msg.message,
+        uuid: msg.from,
+        animationController: AnimationController(
+          vsync: this,
+          duration: const Duration(
+            milliseconds: 0,
+          ),
+        )..forward(),
+      ),
+    );
+
+    setState(() {
+      _messages.insertAll(0, history);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final chatService = Provider.of<ChatService>(context);
+    final userTo = chatService!.userTo!;
 
     return Scaffold(
       appBar: AppBar(
@@ -35,7 +90,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               backgroundColor: Colors.blueAccent,
               maxRadius: 15,
               child: Text(
-                chatService.userTo!.name!.substring(0, 2),
+                userTo.name!.substring(0, 2),
                 style: const TextStyle(
                   fontSize: 12,
                   color: Colors.white,
@@ -46,7 +101,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               height: 3,
             ),
             Text(
-              chatService.userTo!.name!,
+              userTo.name!,
               style: const TextStyle(
                 fontSize: 12,
               ),
@@ -143,7 +198,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   void _handleSubmit() {
     ChatMessage newMessage = ChatMessage(
       text: _textController.text,
-      uuid: '123',
+      uuid: authService!.userAuth!.uuid!,
       animationController: AnimationController(
         vsync: this,
         duration: const Duration(
@@ -158,6 +213,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       _isWriting = false;
     });
 
+    socketService?.emit('personal-message', {
+      "from": authService!.userAuth!.uuid,
+      "to": chatService!.userTo!.uuid,
+      "message": _textController.text,
+    });
+
     _focusNode.requestFocus();
     _textController.clear();
   }
@@ -170,6 +231,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       message.animationController.dispose();
     }
 
+    socketService!.socket.off('personal-message');
     super.dispose();
   }
 }
